@@ -1,0 +1,67 @@
+---
+title: "p8105_hw2_yy3662"
+author: "Yunyi Yang"
+date: "2025-09-29"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Problem 1
+
+```{r}
+library(tidyverse)
+library(skimr)
+p1task1 <- read.csv(file = "./Data/fivethirtyeight_datasets/pols-month.csv",
+                  ,na = c(".", "NA", "")) |>
+  separate(mon, c("year", "month", "day"), convert = TRUE) |>
+  mutate(month = month.name[month])
+president <- select(p1task1, -prez_dem, -prez_gop, -day)
+
+
+
+p1task2 <- read.csv(file = "./Data/fivethirtyeight_datasets/snp.csv",
+                  ,na = c(".", "NA", ""))
+p1task2$date <- as.Date(p1task2$date, "%d/%m/%y")
+p1task2$date <-as.character(p1task2$date)
+p1task2 <- separate(p1task2, date, c("year", "month", "day"), convert = TRUE) |>
+  mutate(p1task2, month = month.name[month]) |>
+  select(-date)
+p1task2$year[which(p1task2$year > 2025)] <- p1task2$year[which(p1task2$year > 2025)] - 100L
+
+
+
+p1task3 <- read.csv(file = "./Data/fivethirtyeight_datasets/unemployment.csv",
+                  ,na = c(".", "NA", "")) |>
+  pivot_longer(Jan:Dec, names_to = "month", values_to = "unemployment") |>
+  mutate(month = month.name[match(tolower(month), tolower(month.abb))]) |>
+  rename(year = "Year")
+
+join1 <- full_join(p1task1, p1task2, by = c("year", "month", "day"))
+join2 <- left_join(join1, p1task3, by = c("year", "month"))
+skimr::skim(join2)
+```
+
+pols-month which names p1task1 contains 822 observations of 9 variables related to the number of national politicians who are democratic or republican at any given time:
+mon: date of the count
+prez_gop: indicator of whether the president was republican on the associated date (1 = yes, 0 = no)
+gov_gop: the number of republican governors on the associated date
+sen_gop: the number of republican senators on the associated date
+rep_gop: the number of republican representatives on the associated date
+prez_dem: indicator of whether the president was democratic on the associated date (1 = yes, 0 = no)
+gov_dem: the number of democratic governors on the associated date
+sen_dem: the number of democratic senators on the associated date
+rep_dem: the number of democratic representatives on the associated date
+
+snp which names p1task2 contains 787 observations of 2 variables related to Standard & Poor’s stock market index (S&P), often used as a representative measure of stock market as a whole:
+date: the date of the observation
+close: the closing values of the S&P stock index on the associated date
+
+unemployment which names p1task3 contains 3 variables:
+year: year of measurement
+month: month of measurement
+unemployment: the percentage of unemployment of specific year and month
+
+In our final dataset, we have 1609 observations and 13 variables, where contains year, month, day, prez_gop, gov_gop, sen_gop, rep_gop, prez_dem, gov_dem, sen_dem, rep_dem, close, unemployment. The year range is from 1947-01-15 to 2015-06-15, and we only have close data at some specific dates which are not 15th. 
