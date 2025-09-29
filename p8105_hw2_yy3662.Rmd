@@ -28,9 +28,9 @@ p1task2$date <- as.Date(p1task2$date, "%d/%m/%y")
 p1task2$date <-as.character(p1task2$date)
 p1task2 <- separate(p1task2, date, c("year", "month", "day"), convert = TRUE) |>
   mutate(p1task2, month = month.name[month]) |>
-  select(-date)
+  select(-date) # I find date is unnecessary in final dataset
 p1task2$year[which(p1task2$year > 2025)] <- p1task2$year[which(p1task2$year > 2025)] - 100L
-
+# because some dates are incorrect because of basic logic of as.Date, so we convert some years like 2065 back to 1965.
 
 
 p1task3 <- read.csv(file = "./Data/fivethirtyeight_datasets/unemployment.csv",
@@ -40,6 +40,8 @@ p1task3 <- read.csv(file = "./Data/fivethirtyeight_datasets/unemployment.csv",
   rename(year = "Year")
 
 join1 <- full_join(p1task1, p1task2, by = c("year", "month", "day"))
+# because p1task2 contains some data about close, which dates are not 15th. If we do left_join, we will lose many information from the second dataset at these dates.
+
 join2 <- left_join(join1, p1task3, by = c("year", "month"))
 skimr::skim(join2)
 ```
