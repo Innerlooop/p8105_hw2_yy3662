@@ -72,16 +72,16 @@ In our final dataset, we have 2782 observations and 13 variables, where contains
 # Problem 2
 ```{r}
 library(readxl)
-mrtrash <- read_excel("./Data/202409 Trash Wheel Collection Data.xlsx", sheet = 1, range = "A2:N653")
+mrtrash <- read_excel("./Data/202509 Trash Wheel Collection Data.xlsx", sheet = 1, range = "A2:N653")
 mrtrash <- janitor::clean_names(mrtrash) |>
   mutate(mrtrash$name, name = "mrtrash")
 mrtrash$sports_balls <- as.integer(round(mrtrash$sports_balls))
 
-professor <- read_excel("./Data/202409 Trash Wheel Collection Data.xlsx", sheet = 2, range = "A2:M120")
+professor <- read_excel("./Data/202509 Trash Wheel Collection Data.xlsx", sheet = 2, range = "A2:M120")
 professor <- janitor::clean_names(professor) |>
   mutate(professor$name, name = "professor")
 
-Gwynnda <- read_excel("./Data/202409 Trash Wheel Collection Data.xlsx", sheet = 4, range = "A2:L265")
+Gwynnda <- read_excel("./Data/202509 Trash Wheel Collection Data.xlsx", sheet = 4, range = "A2:L265")
 Gwynnda <- janitor::clean_names(Gwynnda) |>
   mutate(Gwynnda$name, name = "Gwynnda")
 
@@ -98,4 +98,54 @@ The total weight of Mr. Trash Wheel is 2091.18 tons, and total number of cigaret
 
 # Problem 3
 ```{r}
+zipcode <- read_csv(file = "./Data/zillow_data/Zip Codes.csv",
+                  ,na = c(".", "NA", ""))
+zillow <- read_csv(file = "./Data/zillow_data/Zip_zori_uc_sfrcondomfr_sm_month_NYC.csv",
+                  ,na = c(".", "NA", ""))
+skimr::skim(zipcode)
+skimr::skim(zillow)
+filter(zillow, )
+zipcode <- janitor::clean_names(zipcode)
+
+zillow <- janitor::clean_names(zillow) |>
+  rename(zip_code = "region_name")
+
+duplicate <- filter(janitor::get_dupes(zipcode, zip_code), county == "New York") |>
+  select(-dupe_count)
+zipcode <- anti_join(zipcode, duplicate, by = names(duplicate)) #delete two duplicated rows which have same zipcode but different county.
+
+join4 <- left_join(zillow, zipcode, by = "zip_code") |>
+  select(-file_date) #delete some useless variables
+
+not_included_zip <- anti_join(zipcode, zillow, by = "zip_code") #make a dataframe which includes zipcodes not included in zillow
+skim(zipcode)
+skim(not_included_zip)
+
+nrow(not_included_zip)
+
+
+final_join4 <- pivot_longer(join4, 
+    x2015_01_31:x2024_08_31,
+    names_to = "time",
+    values_to = "zillow_val"
+)
+final_join4 <- drop_na(final_join4, zillow_val) #In final dataset, we keep the NA neighborhood, remove the NA zillow value to remove some useless time point.
+
+length(unique(na.omit(final_join4$neighborhood))) #ignore NA neighborhood when calculate how many different neighborhood
 ```
+In our final dataset, we have 10450 observations depends on the date we observe, because we have too many missing data in many dates for one zipcode, so I just treat different dates as a variable to make this final dataset easier to be read. It includes 149 different zipcodes which is same as number of rows of zillow. There are 42 different neighborhood.
+
+By analyzing the not_included_zip, the zipcode mainly from county code 05, 41, 61, 81 are not included in the zillow dataset. I think there are two possible reasons: 
+
+First, by analyzing the not_included_zip, I found there are 137 missing values of neighborhood in Zipcodes not included in the zillow dataset, and there are totally 142 missing values of neighborhood in zipcode dataset. Because of that, I think maybe zillow dropped these zipcodes because of the incomplete of data.
+
+Second, thew county code of these zipcodes are mainly gathering around 05, 41, 61, 81, so it is possible that zillow didn't have enough people to collect data in these areas in New York.
+
+```{r}
+diff_table <- tibble(diff = join4$x2020_01_31 - join4$x2021_01_31, zipcode = join4$zip_code, county_name = join4$county_name, neighborhood = join4$neighborhood) |>
+  drop_na() |>
+  arrange(desc(diff))
+top10 <- diff_table[1:10,]
+top10
+```
+Based on the top10 housing decreasing prices table, the lower manhattan, lower east side had the worst decreasing of housing price. It may caused by the disease distribution in New York, the place had more patients may got a worse housing price.
