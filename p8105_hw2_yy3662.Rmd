@@ -18,18 +18,18 @@ p1task1 <- read.csv(file = "./Data/fivethirtyeight_datasets/pols-month.csv",
                   ,na = c(".", "NA", "")) |>
   separate(mon, c("year", "month", "day"), convert = TRUE) |>
   mutate(month = month.name[month]) |>
-  pivot_longer(cols = c(prez_dem, prez_gop), names_to = "parties", values_to = "president") |>
-  select(-day)
+  mutate(president = case_match(prez_dem, 1 ~ "dem", 0 ~ "gop")) |>
+  select(-day, -prez_dem, -prez_gop)
 
 
 
 p1task2 <- read.csv(file = "./Data/fivethirtyeight_datasets/snp.csv",
                   ,na = c(".", "NA", ""))
-p1task2$date <- as.Date(p1task2$date, "%d/%m/%y")
+p1task2$date <- as.Date(p1task2$date, "%m/%d/%y")
 p1task2$date <-as.character(p1task2$date)
 p1task2 <- separate(p1task2, date, c("year", "month", "day"), convert = TRUE) |>
   mutate(p1task2, month = month.name[month]) |>
-  select(-date) # I find date is unnecessary in final dataset
+  select(-date, -day) # I find date is unnecessary in final dataset
 p1task2$year[which(p1task2$year > 2025)] <- p1task2$year[which(p1task2$year > 2025)] - 100L
 # because some dates are incorrect because of basic logic of as.Date, so we convert some years like 2065 back to 1965.
 
@@ -40,7 +40,7 @@ p1task3 <- read.csv(file = "./Data/fivethirtyeight_datasets/unemployment.csv",
   mutate(month = month.name[match(tolower(month), tolower(month.abb))]) |>
   rename(year = "Year")
 
-join1 <- full_join(p1task1, p1task2, by = c("year", "month"))
+join1 <- left_join(p1task1, p1task2, by = c("year", "month"))
 
 join2 <- left_join(join1, p1task3, by = c("year", "month"))
 skimr::skim(join2)
@@ -67,21 +67,21 @@ year: year of measurement
 month: month of measurement
 unemployment: the percentage of unemployment of specific year and month
 
-In our final dataset, we have 2782 observations and 13 variables, where contains year, month, day, gov_gop, sen_gop, rep_gop, gov_dem, sen_dem, rep_dem, parties which shows two options of parties, and president shows which party is president from at that year, close, unemployment. The year range is from 1947-01 to 2015-06.
+In our final dataset, we have 822 observations and 11 variables, where contains year, month, gov_gop, sen_gop, rep_gop, gov_dem, sen_dem, rep_dem, presidents shows which party is president from at that year, close, unemployment. The year range is from 1947-01 to 2015-06.
 
 # Problem 2
 ```{r}
 library(readxl)
-mrtrash <- read_excel("./Data/202509 Trash Wheel Collection Data.xlsx", sheet = 1, range = "A2:N653")
+mrtrash <- read_excel("./Data/202509 Trash Wheel Collection Data.xlsx", sheet = 1, range = "A2:N709")
 mrtrash <- janitor::clean_names(mrtrash) |>
   mutate(mrtrash$name, name = "mrtrash")
 mrtrash$sports_balls <- as.integer(round(mrtrash$sports_balls))
 
-professor <- read_excel("./Data/202509 Trash Wheel Collection Data.xlsx", sheet = 2, range = "A2:M120")
+professor <- read_excel("./Data/202509 Trash Wheel Collection Data.xlsx", sheet = 2, range = "A2:M134")
 professor <- janitor::clean_names(professor) |>
   mutate(professor$name, name = "professor")
 
-Gwynnda <- read_excel("./Data/202509 Trash Wheel Collection Data.xlsx", sheet = 4, range = "A2:L265")
+Gwynnda <- read_excel("./Data/202509 Trash Wheel Collection Data.xlsx", sheet = 4, range = "A2:L351")
 Gwynnda <- janitor::clean_names(Gwynnda) |>
   mutate(Gwynnda$name, name = "Gwynnda")
 
@@ -93,8 +93,8 @@ summary(join3)
 sum(filter(join3, name == "mrtrash")$weight_tons)
 sum(filter(join3, name == "Gwynnda", year == "2022", month == "June")$cigarette_butts)
 ```
-Our final dataset has 1032 observations and 15 variables, which includes "dumpster" series number, "month", "year" and "date" that the dumpster was collected, and "weight_tons" which means total weights of trash in the dumpster, "volumn_cubic_yards" which means volumn in cubic yards, and amount of different trash includes: "plastic_bottles", "polystyrene", cigarette_butts", "glass_bottles", "plastic_bags", "wrappers", "sports_balls", and "homes_powered" describes how many homes are powered by these energy from trash, and "name" indicates which trash wheel collected these trash. 
-The total weight of Mr. Trash Wheel is 2091.18 tons, and total number of cigarettes butts in 2022.6 from Gwynnda is 18120.
+Our final dataset has 1188 observations and 15 variables, which includes "dumpster" series number, "month", "year" and "date" that the dumpster was collected, and "weight_tons" which means total weights of trash in the dumpster, "volumn_cubic_yards" which means volumn in cubic yards, and amount of different trash includes: "plastic_bottles", "polystyrene", cigarette_butts", "glass_bottles", "plastic_bags", "wrappers", "sports_balls", and "homes_powered" describes how many homes are powered by these energy from trash, and "name" indicates which trash wheel collected these trash. 
+The total weight of Mr. Trash Wheel is 2283.84 tons, and total number of cigarettes butts in 2022.6 from Gwynnda is 18120.
 
 # Problem 3
 ```{r}
