@@ -17,8 +17,9 @@ library(skimr)
 p1task1 <- read.csv(file = "./Data/fivethirtyeight_datasets/pols-month.csv",
                   ,na = c(".", "NA", "")) |>
   separate(mon, c("year", "month", "day"), convert = TRUE) |>
-  mutate(month = month.name[month])
-president <- select(p1task1, -prez_dem, -prez_gop, -day)
+  mutate(month = month.name[month]) |>
+  pivot_longer(cols = c(prez_dem, prez_gop), names_to = "parties", values_to = "president") |>
+  select(-day)
 
 
 
@@ -39,11 +40,11 @@ p1task3 <- read.csv(file = "./Data/fivethirtyeight_datasets/unemployment.csv",
   mutate(month = month.name[match(tolower(month), tolower(month.abb))]) |>
   rename(year = "Year")
 
-join1 <- full_join(p1task1, p1task2, by = c("year", "month", "day"))
-# because p1task2 contains some data about close, which dates are not 15th. If we do left_join, we will lose many information from the second dataset at these dates.
+join1 <- full_join(p1task1, p1task2, by = c("year", "month"))
 
 join2 <- left_join(join1, p1task3, by = c("year", "month"))
 skimr::skim(join2)
+summary(join2)
 ```
 
 pols-month which names p1task1 contains 822 observations of 9 variables related to the number of national politicians who are democratic or republican at any given time:
@@ -66,4 +67,9 @@ year: year of measurement
 month: month of measurement
 unemployment: the percentage of unemployment of specific year and month
 
-In our final dataset, we have 1609 observations and 13 variables, where contains year, month, day, prez_gop, gov_gop, sen_gop, rep_gop, prez_dem, gov_dem, sen_dem, rep_dem, close, unemployment. The year range is from 1947-01-15 to 2015-06-15, and we only have close data at some specific dates which are not 15th. 
+In our final dataset, we have 1609 observations and 13 variables, where contains year, month, day, gov_gop, sen_gop, rep_gop, gov_dem, sen_dem, rep_dem, parties which shows two options of parties, and president shows which party is president from at that year, close, unemployment. The year range is from 1947-01 to 2015-06, and we only have close data at some specific dates which are not 15th. 
+
+# Problem 2
+```{r}
+
+```
