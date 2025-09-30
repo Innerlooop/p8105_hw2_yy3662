@@ -71,5 +71,31 @@ In our final dataset, we have 2782 observations and 13 variables, where contains
 
 # Problem 2
 ```{r}
+library(readxl)
+mrtrash <- read_excel("./Data/202409 Trash Wheel Collection Data.xlsx", sheet = 1, range = "A2:N653")
+mrtrash <- janitor::clean_names(mrtrash) |>
+  mutate(mrtrash$name, name = "mrtrash")
+mrtrash$sports_balls <- as.integer(round(mrtrash$sports_balls))
 
+professor <- read_excel("./Data/202409 Trash Wheel Collection Data.xlsx", sheet = 2, range = "A2:M120")
+professor <- janitor::clean_names(professor) |>
+  mutate(professor$name, name = "professor")
+
+Gwynnda <- read_excel("./Data/202409 Trash Wheel Collection Data.xlsx", sheet = 4, range = "A2:L265")
+Gwynnda <- janitor::clean_names(Gwynnda) |>
+  mutate(Gwynnda$name, name = "Gwynnda")
+
+mrtrash$year <- as.numeric(mrtrash$year) #mrtrash's year variable is not numeric as professor and Gwynnda
+join3 <- bind_rows(mrtrash, professor, Gwynnda)
+skimr::skim(join3)
+summary(join3)
+
+sum(filter(join3, name == "mrtrash")$weight_tons)
+sum(filter(join3, name == "Gwynnda", year == "2022", month == "June")$cigarette_butts)
+```
+Our final dataset has 1032 observations and 15 variables, which includes "dumpster" series number, "month", "year" and "date" that the dumpster was collected, and "weight_tons" which means total weights of trash in the dumpster, "volumn_cubic_yards" which means volumn in cubic yards, and amount of different trash includes: "plastic_bottles", "polystyrene", cigarette_butts", "glass_bottles", "plastic_bags", "wrappers", "sports_balls", and "homes_powered" describes how many homes are powered by these energy from trash, and "name" indicates which trash wheel collected these trash. 
+The total weight of Mr. Trash Wheel is 2091.18 tons, and total number of cigarettes butts in 2022.6 from Gwynnda is 18120.
+
+# Problem 3
+```{r}
 ```
